@@ -1,1 +1,0 @@
-git clone --recurse-submodules -b 2.2.x-evo-consti-dev git@github.com:OpenHD/Open.HD.git
