@@ -97,12 +97,11 @@ static OHDRunOptions parse_run_parameters(int argc, char *argv[]) {
         ss << "--ground -g       [Run as ground, no camera detection] \n";
         ss << "--clean-start -c  [Wipe all persistent settings OpenHD has "
               "written, can fix any boot issues when switching hw around] \n";
-        ss << "--no-qt-autostart [disable auto start of QOpenHD on ground] \n";
         ss << "--run-time-seconds -r [Manually specify run time (default "
               "infinite),for debugging] \n";
         ss << "--hardware-config-file -h [specify path to hardware.config "
               "file]\n";
-        ss << "Use /boot/openhd/hardware.conf for more configuration\n";
+        ss << "Use /boot/openhd/hardware.config for more configuration\n";
         std::cout << ss.str() << std::flush;
       }
         exit(1);
@@ -230,14 +229,17 @@ int main(int argc, char *argv[]) {
     // it when we are running as air. can be disabled for development purposes.
     // On x20, we do not have qopenhd installed (we run as air only) so we can
     // skip this step
-    if (!openhd::load_config().GEN_NO_QOPENHD_AUTOSTART &&
-        !OHDPlatform::instance().is_x20()) {
-      if (!profile.is_air) {
-        OHDUtil::run_command("systemctl", {"start", "qopenhd"});
-      } else {
-        OHDUtil::run_command("systemctl", {"stop", "qopenhd"});
-      }
-    }
+
+    // DISABLED BECAUSE WE DONT USE QOPENHD ~Eliseo
+
+    // if (!openhd::load_config().GEN_NO_QOPENHD_AUTOSTART &&
+    //     !OHDPlatform::instance().is_x20()) {
+    //   if (!profile.is_air) {
+    //     OHDUtil::run_command("systemctl", {"start", "qopenhd"});
+    //   } else {
+    //     OHDUtil::run_command("systemctl", {"stop", "qopenhd"});
+    //   }
+    // }
 
     // create the global action handler that allows openhd modules to
     // communicate with each other e.g. when the rf link in ohd_interface needs
