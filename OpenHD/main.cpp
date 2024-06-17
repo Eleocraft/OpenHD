@@ -190,8 +190,7 @@ int main(int argc, char *argv[]) {
     ss << "hardware-config-file:["
        << options.hardware_config_file.value_or("DEFAULT") << "]\n";
     ss << "Version number:" << openhd::get_ohd_version_as_string() << "\n";
-    // ss<<"Git info:Branch:"<<git_Branch()<<" SHA:"<<git_CommitSHA1()<<"
-    // Dirty:"<<OHDUtil::yes_or_no(git_AnyUncommittedChanges())<<"\n";
+    ss << "This version of OpenHD is operated by WueSpace e. v. " << "\n";
     std::cout << ss.str() << std::flush;
     openhd::debug_config();
     OHDInterface::print_internal_fec_optimization_method();
