@@ -2,7 +2,6 @@
 // Created by consti10 on 02.05.22.
 //
 
-//#include <OHDTelemetry.h>
 #include <getopt.h>
 #include <ohd_interface.h>
 #ifdef ENABLE_AIR
@@ -212,7 +211,7 @@ int main(int argc, char *argv[]) {
   // Create and link all the OpenHD modules.
   try {
     // This results in fresh default values for all modules (e.g. interface,
-    // telemetry, video)
+    // video)
     if (options.reset_all_settings) {
       openhd::clean_all_settings();
     }
@@ -228,33 +227,22 @@ int main(int argc, char *argv[]) {
     // it when we are running as air. can be disabled for development purposes.
     // On x20, we do not have qopenhd installed (we run as air only) so we can
     // skip this step
-
-    // DISABLED BECAUSE WE DONT USE QOPENHD ~Eliseo
-
-    // if (!openhd::load_config().GEN_NO_QOPENHD_AUTOSTART &&
-    //     !OHDPlatform::instance().is_x20()) {
-    //   if (!profile.is_air) {
-    //     OHDUtil::run_command("systemctl", {"start", "qopenhd"});
-    //   } else {
-    //     OHDUtil::run_command("systemctl", {"stop", "qopenhd"});
-    //   }
-    // }
+    if (!openhd::load_config().GEN_NO_QOPENHD_AUTOSTART &&
+        !OHDPlatform::instance().is_x20()) {
+      if (!profile.is_air) {
+        OHDUtil::run_command("systemctl", {"start", "qopenhd"});
+      } else {
+        OHDUtil::run_command("systemctl", {"stop", "qopenhd"});
+      }
+    }
 
     // create the global action handler that allows openhd modules to
     // communicate with each other e.g. when the rf link in ohd_interface needs
     // to talk to the camera streams to reduce the bitrate
     openhd::LinkActionHandler::instance();
 
-    // We start ohd_telemetry as early as possible, since even without a link
-    // (transmission) it still picks up local log message(s) and forwards them
-    // to any ground station clients (e.g. QOpenHD)
-    // auto ohdTelemetry = std::make_shared<OHDTelemetry>(profile);
-
     // Then start ohdInterface, which discovers detected wifi cards and more.
     auto ohdInterface = std::make_shared<OHDInterface>(profile);
-
-    // Telemetry allows changing all settings (even from other modules)
-    // ohdTelemetry->add_settings_generic(ohdInterface->get_all_settings());
 
     // either one is active, depending on air or ground
     std::unique_ptr<OHDVideoGround> ohd_video_ground = nullptr;
@@ -268,19 +256,8 @@ int main(int argc, char *argv[]) {
       auto cameras = OHDVideoAir::discover_cameras();
       ohd_video_air = std::make_unique<OHDVideoAir>(
           cameras, ohdInterface->get_link_handle());
-      // First add camera specific settings (primary & secondary camera)
-      // auto settings_components = ohd_video_air->get_all_camera_settings();
-      // ohdTelemetry->add_settings_camera_component(0, settings_components[0]);
-      // ohdTelemetry->add_settings_camera_component(1, settings_components[1]);
-      // Then the rest
-      // ohdTelemetry->add_settings_generic(ohd_video_air->get_generic_settings());
     }
 #endif  // ENABLE_AIR
-    // We do not add any more settings to ohd telemetry - the param set(s) are
-    // complete
-    // ohdTelemetry->settings_generic_ready();
-    // now telemetry can send / receive data via wifibroadcast
-    // ohdTelemetry->set_link_handle(ohdInterface->get_link_handle());
     m_console->info("All OpenHD modules running");
     openhd::LEDManager::instance().set_status_okay();
     openhd::log::log_to_kernel("All OpenHD modules running");
@@ -339,11 +316,6 @@ int main(int argc, char *argv[]) {
       ohd_video_ground.reset();
       m_console->debug("Terminating ohd_video_ground - end");
     }
-    // if (ohdTelemetry) {
-    //   m_console->debug("Terminating ohd_telemetry - begin");
-    //   ohdTelemetry.reset();
-    //   m_console->debug("Terminating ohd_telemetry - end");
-    // }
     if (ohdInterface) {
       m_console->debug("Terminating ohd_interface - begin");
       ohdInterface.reset();
