@@ -182,8 +182,8 @@ static std::string createRpicamsrcStream(
         "rpicamsrc name=rpicamsrc camera-number={} bitrate={} preview=0 ",
         camera_number, bitrateBitsPerSecond);
   }
-  // NOTE: These 2 params require the openhd rpicamsrc -
-  if (true) {
+  // NOTE: These 2 params require the openhd rpicamsrc - (does not work ~Eliseo)
+  if (false) {
     // qp-max=51 is the default in rpi v4l2 encoder wrapper
     ss << "qp-min=10 qp-max=51 ";
   }
