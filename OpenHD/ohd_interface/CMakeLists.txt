@@ -26,7 +26,6 @@ set(sources
     src/networking_settings.cpp
     src/wb_link_settings.cpp
     src/wifi_client.cpp
-    src/microhard_link.cpp
     src/ethernet_manager.cpp
     #src/wifi_command_helper2.cpp
 )

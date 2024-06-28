@@ -50,8 +50,6 @@ void openhd::ExternalDeviceManager::on_new_external_device(
       return;
     }
     // New external device connected
-    // log such that the message is shown in QOpenHD
-    openhd::log::log_via_mavlink(5, "External device connected");
     m_curr_ext_devices[id] = external_device;
     m_external_device_count++;
     for (auto& cb : m_callbacks) {
@@ -63,7 +61,6 @@ void openhd::ExternalDeviceManager::on_new_external_device(
                                        external_device.to_string());
       return;
     }
-    // warning in QOpenHD
     openhd::log::get_default()->warn("External device disconnected");
     // existing external device disconnected
     m_curr_ext_devices.erase(id);

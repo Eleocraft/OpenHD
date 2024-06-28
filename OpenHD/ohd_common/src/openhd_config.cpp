@@ -56,10 +56,7 @@ static openhd::Config load_or_default() {
     ret.GEN_ENABLE_LAST_KNOWN_POSITION =
         r.Get<bool>("generic", "GEN_ENABLE_LAST_KNOWN_POSITION");
     ret.GEN_RF_METRICS_LEVEL = r.Get<int>("generic", "GEN_RF_METRICS_LEVEL");
-    ret.GEN_NO_QOPENHD_AUTOSTART =
-        r.Get<bool>("generic", "GEN_NO_QOPENHD_AUTOSTART");
     //
-    ret.DEV_ENABLE_MICROHARD = r.Get<bool>("dev", "DEV_ENABLE_MICROHARD");
     return ret;
   } catch (std::exception& exception) {
     get_logger()->error("Ill-formatted config file {}",
@@ -81,7 +78,6 @@ void openhd::debug_config(const openhd::Config& config) {
       "WIFI_LOCAL_NETWORK_SSID:[{}], WIFI_LOCAL_NETWORK_PASSWORD:[{}]\n"
       "NW_MANUAL_FORWARDING_IPS:{},NW_ETHERNET_CARD:{},NW_FORWARD_TO_LOCALHOST_"
       "58XX:{}\n"
-      "GEN_RF_METRICS_LEVEL:{}, GEN_NO_QOPENHD_AUTOSTART:{}\n",
       config.WIFI_ENABLE_AUTODETECT,
       OHDUtil::str_vec_as_string(config.WIFI_WB_LINK_CARDS),
       config.WIFI_WIFI_HOTSPOT_CARD, config.WIFI_MONITOR_CARD_EMULATE,
@@ -89,7 +85,6 @@ void openhd::debug_config(const openhd::Config& config) {
       config.WIFI_LOCAL_NETWORK_SSID, config.WIFI_LOCAL_NETWORK_PASSWORD,
       OHDUtil::str_vec_as_string(config.NW_MANUAL_FORWARDING_IPS),
       config.NW_ETHERNET_CARD, config.NW_FORWARD_TO_LOCALHOST_58XX,
-      config.GEN_RF_METRICS_LEVEL, config.GEN_NO_QOPENHD_AUTOSTART);
 }
 
 void openhd::debug_config() {

@@ -10,15 +10,6 @@
 // module.
 
 namespace openhd {
-// The radio_ports for telemetry in wifibroadcast. These variables are from the
-// perspective of the air pi aka for the ground pi, tx and rx radio ports are
-// the opposite.
-static constexpr auto TELEMETRY_WIFIBROADCAST_RX_RADIO_PORT = 3;
-static constexpr auto TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT = 4;
-static_assert(TELEMETRY_WIFIBROADCAST_RX_RADIO_PORT !=
-                  TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT,
-              "Must be different");
-
 // Video is unidirectional from air to ground
 static constexpr auto VIDEO_PRIMARY_RADIO_PORT = 10;
 static constexpr auto VIDEO_SECONDARY_RADIO_PORT = 11;
@@ -33,7 +24,7 @@ static constexpr auto MANAGEMENT_RADIO_PORT_GND_TX = 21;
 static constexpr auto AUDIO_WIFIBROADCAST_PORT = 30;
 
 // Where the video stream transmitted via wifibroadcast is made available to
-// QOpenHD to be picked up.
+// be picked up.
 static constexpr auto VIDEO_GROUND_VIDEO_STREAM_1_UDP = 5600;
 static constexpr auto VIDEO_GROUND_VIDEO_STREAM_2_UDP = 5601;
 static_assert(VIDEO_GROUND_VIDEO_STREAM_1_UDP !=

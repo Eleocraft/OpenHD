@@ -726,8 +726,6 @@ std::vector<openhd::Setting> WBLink::get_all_settings() {
     ret.push_back(openhd::Setting{
         WB_ENABLE_STBC,
         openhd::IntSetting{settings.wb_enable_stbc, cb_wb_enable_stbc}});
-    // These 2 params are exposed by default from OpenHD, but whitelisted in
-    // QOpenHD to prevent inexperienced users from changing them
     auto cb_wb_enable_ldpc = [this](std::string, int ldpc) {
       if (!validate_yes_or_no(ldpc)) return false;
       m_settings->unsafe_get_settings().wb_enable_ldpc = ldpc;

@@ -14,10 +14,6 @@
 
 #include "openhd_platform.h"
 
-/**
- * NOTE: This file is copied into QOpenHD to populate the UI.
- */
-
 // For development, always 'works' since fully emulated in SW.
 static constexpr int X_CAM_TYPE_DUMMY_SW = 0;  // Dummy sw picture
 // Manually feed camera data (encoded,rtp) to openhd. Bitrate control and more
@@ -233,8 +229,6 @@ struct XCamera {
   // They should be ordered in ascending resolution / framerate
   // Must always return at least one resolution
   // Might not return all resolutions a camera supports per HW
-  // (In qopenhd, we have the experiment checkbox, where the user can enter
-  // anything he likes)
   std::vector<ResolutionFramerate> get_supported_resolutions() const {
     if (requires_rpi_veye_pipeline()) {
       // Except one, all veye camera(s) only do 1080p30 -
@@ -407,175 +401,12 @@ static std::optional<ResolutionFramerate> parse_video_format(
   return std::nullopt;
 }
 
-//
-// Used in QOpenHD UI
-//
-static std::string get_verbose_string_of_resolution(
-    const ResolutionFramerate& resolution_framerate) {
-  if (resolution_framerate.width_px == 0 &&
-      resolution_framerate.height_px == 0 && resolution_framerate.fps == 0) {
-    return "AUTO";
-  }
-  std::stringstream ss;
-  if (resolution_framerate.width_px == 640 &&
-      resolution_framerate.height_px == 480) {
-    ss << "VGA 4:3";
-  } else if (resolution_framerate.width_px == 848 &&
-             resolution_framerate.height_px == 480) {
-    ss << "VGA 16:9";
-  } else if (resolution_framerate.width_px == 896 &&
-             resolution_framerate.height_px == 504) {
-    ss << "SD 16:9";
-  } else if (resolution_framerate.width_px == 1280 &&
-             resolution_framerate.height_px == 720) {
-    ss << "HD 16:9";
-  } else if (resolution_framerate.width_px == 1920 &&
-             resolution_framerate.height_px == 1080) {
-    ss << "FHD 16:9";
-  } else if (resolution_framerate.width_px == 2560 &&
-             resolution_framerate.height_px == 1440) {
-    ss << "2K 16:9";
-  } else {
-    ss << resolution_framerate.width_px << "x"
-       << resolution_framerate.height_px;
-  }
-  ss << "\n" << resolution_framerate.fps << "fps";
-  return ss.str();
-}
+
 
 static std::string get_v4l2_device_name_string(int value) {
   std::stringstream ss;
   ss << "/dev/video" << value;
   return ss.str();
-}
-
-/**
- * On platforms with many cameras (e.g. rpi) we need a differentiation by
- * manufacturer to make a nice UI - otherwise, the choices are overwhelming.
- * Manufacturer is not really the right name for all categories that result
- * here, but it is 'okay' for the UI in qopenhd.
- */
-struct CameraNameAndType {
-  std::string name;
-  int type;
-};
-struct ManufacturerForPlatform {
-  std::string manufacturer_name;
-  std::vector<CameraNameAndType> cameras;
-};
-/**
- * Return: a list of categories for this platform.
- * Each category has a list of valid camera types (for this platform).
- * @param platform_type unique platform type
- * @param is_secondary selection is different for secondary cam,most notably, we
- * only support usb, develop and a 'disabled' type.
- */
-static std::vector<ManufacturerForPlatform> get_camera_choices_for_platform(
-    int platform_type, bool is_secondary) {
-  std::vector<CameraNameAndType> usb_cameras{
-      CameraNameAndType{"INFIRAY USB", X_CAM_TYPE_USB_INFIRAY},
-      CameraNameAndType{"INFIRAY USB T2", X_CAM_TYPE_USB_INFIRAY_T2},
-      CameraNameAndType{"EXP USB GENERIC", X_CAM_TYPE_USB_GENERIC}};
-  ManufacturerForPlatform MANUFACTURER_USB{"USB", usb_cameras};
-  std::vector<CameraNameAndType> debug_cameras{
-      CameraNameAndType{"Dummy (debug)", 0},
-      CameraNameAndType{"External (DEV)", 2},
-      // CameraNameAndType{"External IP (DEV)",3},
-      CameraNameAndType{"DEV Filecamera", 4},
-  };
-  ManufacturerForPlatform MANUFACTURER_DEBUG{"DEV/DEBUG", debug_cameras};
-  // Secondary can only be used with USB and / or the debug cameras. CSI is not
-  // usable for secondary.
-  if (is_secondary) {
-    // Not really a manufacturer, but ui looks okay with this
-    std::vector<CameraNameAndType> disable_camera{
-        CameraNameAndType{"DISABLE", X_CAM_TYPE_DISABLED},
-    };
-    ManufacturerForPlatform MANUFACTURER_DISABLE{"DISABLE", disable_camera};
-    return std::vector<ManufacturerForPlatform>{
-        MANUFACTURER_DISABLE, MANUFACTURER_USB, MANUFACTURER_DEBUG};
-  }
-  if (platform_type == X_PLATFORM_TYPE_RPI_OLD ||
-      platform_type == X_PLATFORM_TYPE_RPI_4 ||
-      platform_type == X_PLATFORM_TYPE_RPI_CM4) {
-    std::vector<CameraNameAndType> arducam_cameras{
-        CameraNameAndType{"SKYMASTERHDR", 40},
-        CameraNameAndType{"SKYVISIONPRO", 41},
-        CameraNameAndType{"IMX477m", 42},
-        CameraNameAndType{"IMX462", 43},
-        CameraNameAndType{"IMX327", 44},
-        CameraNameAndType{"IMX290", 45},
-        CameraNameAndType{"IMX462_LOWLIGHT_MINI", 46}};
-    std::vector<CameraNameAndType> veye_cameras{
-        CameraNameAndType{"2MP", 60},
-        CameraNameAndType{"CSIMX307", 61},
-        CameraNameAndType{"CSSC132", 62},
-        CameraNameAndType{"MVCAM", 63},
-    };
-    std::vector<CameraNameAndType> rpif_cameras{
-        CameraNameAndType{"V1 OV5647", 30},
-        CameraNameAndType{"V2 IMX219", 31},
-        CameraNameAndType{"V3 IMX708", 32},
-        CameraNameAndType{"HQ IMX477", 33},
-    };
-    std::vector<CameraNameAndType> hdmi_to_csi_cameras{
-        CameraNameAndType{"GENERIC HDMI to CSI", 20}};
-    return std::vector<ManufacturerForPlatform>{
-        ManufacturerForPlatform{"ARDUCAM", arducam_cameras},
-        ManufacturerForPlatform{"VEYE", veye_cameras},
-        ManufacturerForPlatform{"RPI FOUNDATION", rpif_cameras},
-        ManufacturerForPlatform{"HDMI TO CSI", hdmi_to_csi_cameras},
-        MANUFACTURER_USB,
-        MANUFACTURER_DEBUG};
-  } else if (platform_type == X_PLATFORM_TYPE_ALWINNER_X20) {
-    // On the X20, we have auto detection of the camera type,
-    // But we still populate the UI like for platforms where the user has to
-    // select the cam type.
-    std::vector<CameraNameAndType> generic_cameras{
-        CameraNameAndType{"GENERIC", X_CAM_TYPE_X20_HDZERO_GENERIC},
-    };
-    std::vector<CameraNameAndType> runcam_cameras{
-        CameraNameAndType{"RUNCAM V1", X_CAM_TYPE_X20_HDZERO_RUNCAM_V1},
-        CameraNameAndType{"RUNCAM V2", X_CAM_TYPE_X20_HDZERO_RUNCAM_V2},
-        CameraNameAndType{"RUNCAM V3", X_CAM_TYPE_X20_HDZERO_RUNCAM_V3},
-        CameraNameAndType{"RUNCAM NANO 90",
-                          X_CAM_TYPE_X20_HDZERO_RUNCAM_NANO_90},
-    };
-    return std::vector<ManufacturerForPlatform>{
-        ManufacturerForPlatform{"HDZERO", generic_cameras},
-        ManufacturerForPlatform{"RUNCAM", runcam_cameras}};
-  } else if ((platform_type == X_PLATFORM_TYPE_ROCKCHIP_RK3566_RADXA_ZERO3W) ||
-             (platform_type == X_PLATFORM_TYPE_ROCKCHIP_RK3566_RADXA_CM3)) {
-    std::vector<CameraNameAndType> arducam_cameras{
-        CameraNameAndType{"IMX219", X_CAM_TYPE_ROCK_RK3566_IMX219},
-        CameraNameAndType{"PLACEHOLDER1", X_CAM_TYPE_ROCK_RK3566_PLACEHOLDER1},
-        CameraNameAndType{"PLACEHOLDER2", X_CAM_TYPE_ROCK_RK3566_PLACEHOLDER2},
-    };
-    return std::vector<ManufacturerForPlatform>{
-        ManufacturerForPlatform{"ARDUCAM", arducam_cameras}, MANUFACTURER_USB,
-        MANUFACTURER_DEBUG};
-  } else if (platform_type == X_PLATFORM_TYPE_ROCKCHIP_RK3588_RADXA_ROCK5_A) {
-    return std::vector<ManufacturerForPlatform>{MANUFACTURER_USB,
-                                                MANUFACTURER_DEBUG};
-  } else if (platform_type == X_PLATFORM_TYPE_ROCKCHIP_RK3588_RADXA_ROCK5_B) {
-    std::vector<CameraNameAndType> hdmi_cameras{
-        CameraNameAndType{"HDMI IN", X_CAM_TYPE_ROCK_HDMI_IN},
-    };
-    return std::vector<ManufacturerForPlatform>{
-        ManufacturerForPlatform{"HDMI IN", hdmi_cameras}, MANUFACTURER_USB,
-        MANUFACTURER_DEBUG};
-  } else if (platform_type == X_PLATFORM_TYPE_X86) {
-    return std::vector<ManufacturerForPlatform>{MANUFACTURER_USB,
-                                                MANUFACTURER_DEBUG};
-  } else if (platform_type == X_PLATFORM_TYPE_NVIDIA_XAVIER) {
-    std::vector<CameraNameAndType> nvidia_leopard_csi_cameras{
-        CameraNameAndType{"IMX577", X_CAM_TYPE_NVIDIA_XAVIER_IMX577},
-    };
-    return std::vector<ManufacturerForPlatform>{
-        ManufacturerForPlatform{"LEOPARD", nvidia_leopard_csi_cameras},
-        MANUFACTURER_USB, MANUFACTURER_DEBUG};
-  }
-  return std::vector<ManufacturerForPlatform>{MANUFACTURER_DEBUG};
 }
 
 #endif  // OPENHD_CAMERA_HPP

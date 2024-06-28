@@ -223,19 +223,6 @@ int main(int argc, char *argv[]) {
     const auto profile = DProfile::discover(options.run_as_air);
     write_profile_manifest(profile);
 
-    // we need to start QOpenHD when we are running as ground, or stop / disable
-    // it when we are running as air. can be disabled for development purposes.
-    // On x20, we do not have qopenhd installed (we run as air only) so we can
-    // skip this step
-    if (!openhd::load_config().GEN_NO_QOPENHD_AUTOSTART &&
-        !OHDPlatform::instance().is_x20()) {
-      if (!profile.is_air) {
-        OHDUtil::run_command("systemctl", {"start", "qopenhd"});
-      } else {
-        OHDUtil::run_command("systemctl", {"stop", "qopenhd"});
-      }
-    }
-
     // create the global action handler that allows openhd modules to
     // communicate with each other e.g. when the rf link in ohd_interface needs
     // to talk to the camera streams to reduce the bitrate

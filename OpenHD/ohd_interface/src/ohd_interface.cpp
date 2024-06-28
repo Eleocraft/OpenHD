@@ -9,7 +9,6 @@
 
 #include <utility>
 
-#include "microhard_link.h"
 #include "openhd_config.h"
 #include "openhd_global_constants.hpp"
 #include "openhd_util_filesystem.h"
@@ -22,10 +21,6 @@ OHDInterface::OHDInterface(OHDProfile profile1)
   m_monitor_mode_cards = {};
   m_opt_hotspot_card = std::nullopt;
   const auto config = openhd::load_config();
-  if (config.DEV_ENABLE_MICROHARD) {
-    m_microhard_link = std::make_shared<MicrohardLink>(m_profile);
-    return;
-  }
   DWifiCards::main_discover_an_process_wifi_cards(
       config, m_profile, m_console, m_monitor_mode_cards, m_opt_hotspot_card);
   m_console->debug("monitor_mode card(s):{}",
@@ -109,10 +104,6 @@ std::vector<openhd::Setting> OHDInterface::get_all_settings() {
     auto settings = m_wb_link->get_all_settings();
     OHDUtil::vec_append(ret, settings);
   }
-  if (m_microhard_link) {
-    auto settings = m_microhard_link->get_all_settings();
-    OHDUtil::vec_append(ret, settings);
-  }
   if (m_wifi_hotspot != nullptr) {
     auto cb_wifi_hotspot_mode = [this](std::string, int value) {
       if (!is_valid_wifi_hotspot_mode(value)) return false;
@@ -154,9 +145,6 @@ void OHDInterface::print_internal_fec_optimization_method() {
 std::shared_ptr<OHDLink> OHDInterface::get_link_handle() {
   if (m_wb_link) {
     return m_wb_link;
-  }
-  if (m_microhard_link) {
-    return m_microhard_link;
   }
   return nullptr;
 }
