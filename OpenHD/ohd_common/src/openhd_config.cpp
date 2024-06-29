@@ -77,7 +77,7 @@ void openhd::debug_config(const openhd::Config& config) {
       "WIFI_FORCE_NO_LINK_BUT_HOTSPOT:{}, WIFI_LOCAL_NETWORK_ENABLE:{}, "
       "WIFI_LOCAL_NETWORK_SSID:[{}], WIFI_LOCAL_NETWORK_PASSWORD:[{}]\n"
       "NW_MANUAL_FORWARDING_IPS:{},NW_ETHERNET_CARD:{},NW_FORWARD_TO_LOCALHOST_"
-      "58XX:{}\n"
+      "58XX:{}\n")
       config.WIFI_ENABLE_AUTODETECT,
       OHDUtil::str_vec_as_string(config.WIFI_WB_LINK_CARDS),
       config.WIFI_WIFI_HOTSPOT_CARD, config.WIFI_MONITOR_CARD_EMULATE,
