@@ -137,40 +137,6 @@ WBLink::WBLink(OHDProfile profile, std::vector<WiFiCard> broadcast_cards)
     dummy->set_drop_mode(DIRTY_emulate_drop_mode);
   }
   {
-    // Setup the tx & rx instances for telemetry. Telemetry is bidirectional,aka
-    // tx radio port on air is the same as rx on ground and verse visa
-    const auto radio_port_rx =
-        m_profile.is_air ? openhd::TELEMETRY_WIFIBROADCAST_RX_RADIO_PORT
-                         : openhd::TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT;
-    const auto radio_port_tx =
-        m_profile.is_air ? openhd::TELEMETRY_WIFIBROADCAST_TX_RADIO_PORT
-                         : openhd::TELEMETRY_WIFIBROADCAST_RX_RADIO_PORT;
-    auto cb_rx = [this](const uint8_t* data, int data_len) {
-      m_last_received_packet_ts_ms = openhd::util::steady_clock_time_epoch_ms();
-      auto shared =
-          std::make_shared<std::vector<uint8_t>>(data, data + data_len);
-      on_receive_telemetry_data(shared);
-    };
-    WBStreamRx::Options options_tele_rx{};
-    options_tele_rx.enable_fec = false;
-    options_tele_rx.radio_port = radio_port_rx;
-    options_tele_rx.enable_threading = true;
-    // receive queue: On air, up to 16 packets
-    // On ground, up to 32 packets
-    options_tele_rx.packet_queue_size = m_profile.is_air ? 16 : 32;
-    m_wb_tele_rx = std::make_unique<WBStreamRx>(m_wb_txrx, options_tele_rx);
-    m_wb_tele_rx->set_callback(cb_rx);
-    WBStreamTx::Options options_tele_tx{};
-    options_tele_tx.enable_fec = false;
-    options_tele_tx.radio_port = radio_port_tx;
-    // Transmission queue: On air, up to 32 packets
-    // On ground, up to 16 packets
-    options_tele_tx.packet_data_queue_size = m_profile.is_air ? 32 : 16;
-    m_wb_tele_tx =
-        std::make_unique<WBStreamTx>(m_wb_txrx, options_tele_tx, m_tx_header_1);
-    m_wb_tele_tx->set_encryption(true);
-  }
-  {
     // Video is unidirectional, aka always goes from air pi to ground pi
     if (m_profile.is_air) {
       // we transmit video
