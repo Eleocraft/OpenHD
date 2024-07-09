@@ -156,9 +156,10 @@ void GStreamerStream::setup() {
       setting.air_recording == AIR_RECORDING_ON ||
       (setting.air_recording == AIR_RECORDING_AUTO_ARM_DISARM &&
        m_armed_enable_air_recording);
-  // for safety we only add the tee command at the right place if recording is
+  const bool ADD_IMAGE_SAVING_TO_PIPELINE = setting.air_image_seconds != 0;
+  // for safety we only add the tee command at the right place if recording or image saving is
   // enabled.
-  if (ADD_RECORDING_TO_PIPELINE) {
+  if (ADD_RECORDING_TO_PIPELINE || ADD_IMAGE_SAVING_TO_PIPELINE) {
     m_console->info("Air recording active");
     pipeline_content << "tee name=t ! ";
   }
@@ -197,6 +198,11 @@ void GStreamerStream::setup() {
   } else {
     m_opt_curr_recording_filename = std::nullopt;
   }
+  if (ADD_IMAGE_SAVING_TO_PIPELINE) {
+    const auto image_filename = "test.jpg";
+    pipeline_content << OHDGstHelper::createImageSavingCodec(setting.air_image_seconds, image_filename);
+  }
+  if
   {
     const auto index = m_camera_holder->get_camera().index;
     const uint8_t cam_type = (uint8_t)m_camera_holder->get_camera().camera_type;

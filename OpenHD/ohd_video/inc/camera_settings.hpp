@@ -85,6 +85,9 @@ struct CameraSettings {
   int h26x_num_slices = 0;
   // enable/disable recording to file
   int air_recording = AIR_RECORDING_OFF;
+  // dictates how many seconds are between each image.
+  // if set to 0 the image saving function is completely disabled.
+  int air_image_seconds = 0;
   //
   // Below are params that most often only affect the ISP, not the encoder
   //

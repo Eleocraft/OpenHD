@@ -710,6 +710,19 @@ static std::string createRecordingForVideoCodec(
   }
   return ss.str();
 }
+// This function creates the gstreamer codec to save the current image every x seconds
+static std::string createImageSavingCodec(
+    const int seconds, const std::string& out_filename) {
+  std::stringstream ss;
+  // don't forget the white space before the " t." !
+  ss << " t. ! queue ! ";
+  ss << "! decodebin ! videoconvert ! jpegenc ! multifilesink location=";
+  // ss << "video/x-raw, format=I420, width=1920, height=1080, framerate=1/";
+  // ss << seconds;
+  // ss << " ! identity sync=true ! timeoverlay ! jpegenc ! multifilesink location=";
+  ss << out_filename;
+  return ss.str();
+}
 
 static std::string create_input_custom_udp_rtp_port(
     const CameraSettings& settings) {
