@@ -199,7 +199,8 @@ void GStreamerStream::setup() {
     m_opt_curr_recording_filename = std::nullopt;
   }
   if (ADD_IMAGE_SAVING_TO_PIPELINE) {
-    const auto image_filename = "/home/pi/test";
+    //temporary filename (using same as recording filename)
+    const auto image_filename = openhd::video::create_unused_recording_filename("");
     pipeline_content << OHDGstHelper::createImageSavingCodec(setting.air_image_seconds, image_filename);
   }
   {
