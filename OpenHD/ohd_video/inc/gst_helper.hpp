@@ -716,11 +716,11 @@ static std::string createImageSavingCodec(
   std::stringstream ss;
   // don't forget the white space before the " t." !
   ss << " t. ! queue ! ";
-  ss << "! decodebin ! videoconvert ! jpegenc ! multifilesink location=";
-  // ss << "video/x-raw, format=I420, width=1920, height=1080, framerate=1/";
-  // ss << seconds;
-  // ss << " ! identity sync=true ! timeoverlay ! jpegenc ! multifilesink location=";
-  ss << out_filename;
+  // ss << "decodebin ! videoconvert ! jpegenc ! multifilesink location=";
+  ss << "video/x-raw, format=I420, width=1920, height=1080, framerate=1/";
+  ss << seconds;
+  ss << " ! identity sync=true ! timeoverlay ! jpegenc ! multifilesink location=";
+  ss << out_filename << "-%02d.jpg max-size-time=1000000";
   return ss.str();
 }
 
