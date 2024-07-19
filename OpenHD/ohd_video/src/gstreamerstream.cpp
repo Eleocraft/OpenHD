@@ -198,28 +198,27 @@ void GStreamerStream::setup() {
   } else {
     m_opt_curr_recording_filename = std::nullopt;
   }
-  if (ADD_IMAGE_SAVING_TO_PIPELINE) {
-    //temporary filename (using same as recording filename)
-    const auto image_filename = openhd::video::create_unused_recording_filename("");
+  if (ADD_IMAGE_SAVING_TO_PIPELINE) { // This is the new part
+    const auto image_filename = openhd::video::create_unused_image_filename();
     pipeline_content << OHDGstHelper::createImageSavingCodec(setting.air_image_seconds, image_filename);
   }
-  {
-    const auto index = m_camera_holder->get_camera().index;
-    const uint8_t cam_type = (uint8_t)m_camera_holder->get_camera().camera_type;
-    auto cam_info = openhd::LinkActionHandler::CamInfo{
-        true,
-        (uint8_t)index,
-        cam_type,
-        CAM_STATUS_RESTARTING,
-        ADD_RECORDING_TO_PIPELINE,
-        (uint8_t)video_codec_to_int(setting.streamed_video_format.videoCodec),
-        (uint16_t)setting.h26x_bitrate_kbits,
-        (uint8_t)setting.h26x_keyframe_interval,
-        (uint16_t)setting.streamed_video_format.width,
-        (uint16_t)setting.streamed_video_format.height,
-        (uint16_t)setting.streamed_video_format.framerate};
-    openhd::LinkActionHandler::instance().set_cam_info(index, cam_info);
-  }
+  // {
+  //   const auto index = m_camera_holder->get_camera().index;
+  //   const uint8_t cam_type = (uint8_t)m_camera_holder->get_camera().camera_type;
+  //   auto cam_info = openhd::LinkActionHandler::CamInfo{
+  //       true,
+  //       (uint8_t)index,
+  //       cam_type,
+  //       CAM_STATUS_RESTARTING,
+  //       ADD_RECORDING_TO_PIPELINE,
+  //       (uint8_t)video_codec_to_int(setting.streamed_video_format.videoCodec),
+  //       (uint16_t)setting.h26x_bitrate_kbits,
+  //       (uint8_t)setting.h26x_keyframe_interval,
+  //       (uint16_t)setting.streamed_video_format.width,
+  //       (uint16_t)setting.streamed_video_format.height,
+  //       (uint16_t)setting.streamed_video_format.framerate};
+  //   openhd::LinkActionHandler::instance().set_cam_info(index, cam_info);
+  // }
   m_console->debug("Starting pipeline:[{}]", pipeline_content.str());
   // Protect against unwanted use - stop and free the pipeline first
   assert(m_gst_pipeline == nullptr);

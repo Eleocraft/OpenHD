@@ -22,6 +22,7 @@ namespace openhd::video {
 // .mp4)
 
 static constexpr auto RECORDINGS_PATH = "/home/openhd/Videos/";
+static constexpr auto IMAGE_PATH = "/home/openhd/Images/";
 
 static std::string get_localtime_string() {
   auto t = std::time(nullptr);
@@ -38,9 +39,9 @@ static std::string format_track_count(int count) {
   return oss.str();
 }
 
-static int get_recording_index_track_count() {
+static int get_recording_index_track_count(const std::string& path) {
   const std::string recording_track_filename =
-      std::string(RECORDINGS_PATH) + "track_count.txt";
+      std::string(path) + "track_count.txt";
   int track_count = 1;
   const auto opt_content =
       OHDFilesystemUtil::opt_read_file(recording_track_filename);
@@ -66,28 +67,19 @@ static std::string create_unused_recording_filename(const std::string& suffix) {
   if (!OHDFilesystemUtil::exists(RECORDINGS_PATH)) {
     OHDFilesystemUtil::create_directories(RECORDINGS_PATH);
   }
-  // TEMPORARY - considering how many users use RPI (where date is not reliable)
-  // we just name the files ascending
-  // recording-1, recording-2 ...
-  // we also make sure that we always use ascending numbers, even if the user
-  // deletes a video
-  const int track_index = get_recording_index_track_count();
+  const int track_index = get_recording_index_track_count(RECORDINGS_PATH);
   std::stringstream ss;
   ss << RECORDINGS_PATH << "recording_" << track_index << suffix;
   return ss.str();
-  /*for(int i=0;i<10000;i++){
-    // Suffix might be either .
-    std::stringstream filename;
-    filename<<RECORDINGS_PATH;
-    filename<<"recording"<<i<<suffix;
-    if(!OHDFilesystemUtil::exists(filename.str())){
-      return filename.str();
-    }
+}
+static std::string create_unused_image_filename() {
+  if (!OHDFilesystemUtil::exists(IMAGE_PATH)) {
+    OHDFilesystemUtil::create_directories(IMAGE_PATH);
   }
-  openhd::log::get_default()->warn("Cannot create new filename, overwriting
-  already existing"); std::stringstream filename; filename<<RECORDINGS_PATH;
-  filename<<"recording"<<0<<suffix;
-  return filename.str();*/
+  const int track_index = get_recording_index_track_count(IMAGE_PATH);
+  std::stringstream ss;
+  ss << IMAGE_PATH << "images_" << track_index << "/image_";
+  return ss.str();
 }
 
 }  // namespace openhd::video
