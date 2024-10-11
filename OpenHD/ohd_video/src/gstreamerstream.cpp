@@ -159,10 +159,12 @@ void GStreamerStream::setup() {
   const bool ADD_IMAGE_SAVING_TO_PIPELINE = setting.air_image_seconds != 0;
   // for safety we only add the tee command at the right place if recording or image saving is
   // enabled.
-  if (ADD_RECORDING_TO_PIPELINE || ADD_IMAGE_SAVING_TO_PIPELINE) {
+  if (ADD_RECORDING_TO_PIPELINE) {
     m_console->info("Air recording active");
     pipeline_content << "tee name=t ! ";
   }
+  if (ADD_IMAGE_SAVING_TO_PIPELINE)
+    m_console->info("Air image extraction active");
   // After we've written the parts for the different camera implementation(s) we
   // just need to append the rtp part and the udp out add rtp part
   if (dirty_use_raw) {

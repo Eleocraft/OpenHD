@@ -182,11 +182,6 @@ static std::string createRpicamsrcStream(
         "rpicamsrc name=rpicamsrc camera-number={} bitrate={} preview=0 ",
         camera_number, bitrateBitsPerSecond);
   }
-  // NOTE: These 2 params require the openhd rpicamsrc - (does not work ~Eliseo)
-  if (false) {
-    // qp-max=51 is the default in rpi v4l2 encoder wrapper
-    ss << "qp-min=10 qp-max=51 ";
-  }
   // keyframe-interval   : Interval (in frames) between I frames. -1 =
   // automatic, 0 = single-keyframe
   if (openhd::validate_rpi_keyframe_interval(settings.h26x_keyframe_interval)) {
@@ -209,6 +204,8 @@ static std::string createRpicamsrcStream(
   // allocate more bandwidth at a specific area, but rather zooms in on a
   // specific area (which is not really of use to use)
   ss << " ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   if (settings.streamed_video_format.videoCodec == VideoCodec::H264) {
     if (settings.force_sw_encode) {
       openhd::log::get_default()->warn("Forced SW encode");
@@ -368,6 +365,8 @@ static std::string create_rpi_hdmi_v4l2_stream(const CameraSettings& settings) {
   // io-mode=5 ==  GST_V4L2_IO_DMABUF_IMPORT
   // ss << "v4l2src io-mode=5 ! ";
   ss << "v4l2src  io-mode=dmabuf ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   ss << "video/x-raw,framerate=30/1,format=UYVY ! ";
   ss << create_rpi_v4l2_h264_encoder(settings);
   return ss.str();
@@ -443,6 +442,8 @@ static std::string createLibcamerasrcStream(const CameraSettings& settings) {
   }
   // openhd-libcamera specific options end
   ss << " ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   if (settings.streamed_video_format.videoCodec == VideoCodec::H264) {
     // First we set the caps filter(s) on libcamerasrc, this way we control the
     // format (output by ISP), w,h and fps
@@ -484,6 +485,8 @@ static std::string create_veye_vl2_stream(const CameraSettings& settings,
   // width=(int)1920, height=(int)1080, framerate=(fraction)30/1 ! ";
   std::stringstream ss;
   ss << fmt::format("v4l2src io-mode=dmabuf device={} ! ", v4l2_device_name);
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   ss << fmt::format(
       "video/x-raw,format=(string)UYVY, width={}, height={}, framerate={}/1 ! ",
       settings.streamed_video_format.width,
@@ -528,17 +531,20 @@ static std::string createRockchipEncoderPipeline(
 }
 
 static std::string createRockchipV4L2Pipeline(const int video_dev,
-                                              const int framerate) {
+                                              const CameraSettings& settings) {
   std::stringstream ss;
   ss << "v4l2src device=/dev/video" << video_dev
-     << " io-mode=auto do-timestamp=true ! video/x-raw,format=NV12, ";
-  ss << "framerate=" << framerate << "/1 ! ";
+     << " io-mode=auto do-timestamp=true ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction   
+  ss << "video/x-raw,format=NV12, ";
+  ss << "framerate=" << settings.streamed_video_format.framerate << "/1 ! ";
   return ss.str();
 }
 
 static std::string createRockchipHDMIStream(const CameraSettings& settings) {
   std::stringstream ss;
-  ss << createRockchipV4L2Pipeline(0, settings.streamed_video_format.framerate);
+  ss << createRockchipV4L2Pipeline(0, settings);
   ss << createRockchipEncoderPipeline(settings);
   return ss.str();
 }
@@ -547,7 +553,7 @@ static std::string createRockchipCSIStream(int v4l2_filenumber,
                                            const CameraSettings& settings) {
   std::stringstream ss;
   ss << createRockchipV4L2Pipeline(v4l2_filenumber,
-                                   settings.streamed_video_format.framerate);
+                                   settings);
   ss << createRockchipEncoderPipeline(settings);
   return ss.str();
 }
@@ -557,18 +563,18 @@ static std::string createRockchipCSIStream(int v4l2_filenumber,
  * @param sensor_id sensor id
  * OBSOLETE !
  */
-static std::string createAllwinnerSensorPipeline(const int sensor_id,
-                                                 const int width,
-                                                 const int height,
-                                                 const int framerate) {
-  std::stringstream ss;
-  ss << "v4l2src device=/dev/video" << sensor_id << " ! ";
-  ss << "video/x-raw,pixelformat=NV12,";
-  ss << "width=" << width << ", ";
-  ss << "height=" << height << ", ";
-  ss << "framerate=" << framerate << "/1 ! ";
-  return ss.str();
-}
+// static std::string createAllwinnerSensorPipeline(const int sensor_id,
+//                                                  const int width,
+//                                                  const int height,
+//                                                  const int framerate) {
+//   std::stringstream ss;
+//   ss << "v4l2src device=/dev/video" << sensor_id << " ! ";
+//   ss << "video/x-raw,pixelformat=NV12,";
+//   ss << "width=" << width << ", ";
+//   ss << "height=" << height << ", ";
+//   ss << "framerate=" << framerate << "/1 ! ";
+//   return ss.str();
+// }
 
 // using cedar (closed source) HW acceleration.
 static std::string createAllwinnerEncoderPipeline(
@@ -587,6 +593,8 @@ static std::string createAllwinnerEncoderPipeline(
 static std::string createAllwinnerStream(const CameraSettings& settings) {
   std::stringstream ss;
   ss << createAllwinnerEncoderPipeline(settings);
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   return ss.str();
 }
 
@@ -616,6 +624,8 @@ static std::string createV4l2SrcRawAndSwEncodeStream(
     const std::string& device_node, const CameraSettings& settings) {
   std::stringstream ss;
   ss << fmt::format("v4l2src device={} ! ", device_node);
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   ss << "video/x-raw";
   ss << gst_v4l2_width_height_fps_unless_omit(settings);
   ss << " ! ";
@@ -715,7 +725,7 @@ static std::string createImageSavingCodec(
     const int seconds, const std::string& out_filename) {
   std::stringstream ss;
   // don't forget the white space before the " t." !
-  ss << " t. ! queue ! ";
+  ss << " i. ! queue ! ";
   // ss << "decodebin ! videoconvert ! jpegenc ! multifilesink location=";
   ss << "video/x-raw, format=I420, width=1920, height=1080, framerate=1/";
   ss << seconds;
@@ -732,6 +742,8 @@ static std::string create_input_custom_udp_rtp_port(
   ss << fmt::format(
       "udpsrc address={} port={} {} ! ", address, input_port,
       gst_create_rtp_caps(settings.streamed_video_format.videoCodec));
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   ss << create_rtp_depacketize_for_codec(
       settings.streamed_video_format.videoCodec);
   return ss.str();
@@ -742,6 +754,8 @@ static std::string createDummyStreamX(const CameraSettings& settings) {
   const auto platform = OHDPlatform::instance();
   std::stringstream ss;
   ss << "videotestsrc name=videotestsrc ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   // h265 cannot do NV12, but I420.
   // x264 can do both NV12 and I420
   // so we use I420 here since every SW encoder can do it.
@@ -802,6 +816,8 @@ static std::string create_dummy_filesrc_stream(const CameraSettings& settings) {
                     settings.streamed_video_format.framerate);
   ss << "queue ! ";
   ss << "videoscale ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   if (platform.is_rock()) {
     // ROCK needs NV12
     ss << "video/x-raw, format=NV12";
@@ -840,6 +856,8 @@ static std::string create_dummy_filesrc_stream(const CameraSettings& settings) {
 static std::string create_nvarguscamerasrc(const CameraSettings& settings) {
   std::stringstream ss;
   ss << "nvarguscamerasrc do-timestamp=true ! ";
+  if (settings.air_image_seconds != 0)
+    ss << "tee name=i ! "; // for air image extraction
   ss << "video/x-raw(memory:NVMM), format=NV12, ";
   ss << "width=" << settings.streamed_video_format.width << ", ";
   ss << "height=" << settings.streamed_video_format.height << ", ";
