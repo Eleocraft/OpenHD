@@ -442,8 +442,6 @@ static std::string createLibcamerasrcStream(const CameraSettings& settings) {
   }
   // openhd-libcamera specific options end
   ss << " ! ";
-  if (settings.air_image_seconds != 0)
-    ss << "tee name=i ! "; // for air image extraction
   if (settings.streamed_video_format.videoCodec == VideoCodec::H264) {
     // First we set the caps filter(s) on libcamerasrc, this way we control the
     // format (output by ISP), w,h and fps
@@ -454,6 +452,8 @@ static std::string createLibcamerasrcStream(const CameraSettings& settings) {
         settings.streamed_video_format.width,
         settings.streamed_video_format.height,
         settings.streamed_video_format.framerate);
+    if (settings.air_image_seconds != 0)
+      ss << "videorate ! tee name=i ! queue ! "; // for air image extraction
     if (settings.force_sw_encode) {
       openhd::log::get_default()->warn("Forced SW encode");
       ss << createSwEncoder(settings);
@@ -472,6 +472,8 @@ static std::string createLibcamerasrcStream(const CameraSettings& settings) {
                       settings.streamed_video_format.width,
                       settings.streamed_video_format.height,
                       settings.streamed_video_format.framerate);
+    if (settings.air_image_seconds != 0)
+      ss << "videorate ! tee name=i ! queue ! "; // for air image extraction
     ss << createSwEncoder(settings);
   }
   return ss.str();
@@ -724,13 +726,12 @@ static std::string createRecordingForVideoCodec(
 static std::string createImageSavingCodec(
     const int seconds, const std::string& out_filename) {
   std::stringstream ss;
-  // don't forget the white space before the " t." !
+  // don't forget the white space before the " i." !
   ss << " i. ! queue ! ";
-  // ss << "decodebin ! videoconvert ! jpegenc ! multifilesink location=";
-  ss << "video/x-raw, format=I420, width=1920, height=1080, framerate=1/";
+  ss << "video/x-raw,width=512,height=512,framerate=1/";
   ss << seconds;
-  ss << " ! identity sync=true ! timeoverlay ! jpegenc ! multifilesink location=";
-  ss << out_filename << "-%02d.jpg max-size-time=1000000";
+  ss << " ! jpegenc ! multifilesink location=";
+  ss << out_filename << "-%02d.jpg";
   return ss.str();
 }
 
