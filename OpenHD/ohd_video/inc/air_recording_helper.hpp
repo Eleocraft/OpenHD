@@ -78,11 +78,11 @@ static std::string create_unused_image_filename() {
   }
   const int track_index = get_recording_index_track_count(IMAGE_PATH);
   std::stringstream ss;
-  ss << IMAGE_PATH << "images_" << track_index;
+  ss << IMAGE_PATH << "Track_" << track_index;
   if (!OHDFilesystemUtil::exists(ss.str())) {
     OHDFilesystemUtil::create_directories(ss.str());
   }
-  ss << "/image_";
+  ss << "/image";
   return ss.str();
 }
 
