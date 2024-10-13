@@ -713,10 +713,9 @@ static std::string createImageSavingCodec(
   ss << " t. ! queue ! decodebin ! videorate ! videoscale ! ";
   ss << "video/x-raw,width=960,height=540,framerate=1/";
   ss << seconds;
-  ss << " ! fakesink sync=false";
-  /*
+  //ss << " ! fakesink sync=false";
   ss << " ! jpegenc ! multifilesink location=";
-  ss << out_filename << "-%02d.jpg";*/
+  ss << out_filename << "-%02d.jpg sync=false";
   return ss.str();
 }
 
