@@ -159,7 +159,7 @@ void GStreamerStream::setup() {
   const bool ADD_IMAGE_SAVING_TO_PIPELINE = setting.air_image_seconds != 0;
   // for safety we only add the tee command at the right place if recording or image saving is
   // enabled.
-  if (ADD_IMAGE_SAVING_TO_PIPELINE && ADD_RECORDING_TO_PIPELINE) {
+  if (ADD_IMAGE_SAVING_TO_PIPELINE || ADD_RECORDING_TO_PIPELINE) {
     pipeline_content << "tee name=t ! ";
   }
 

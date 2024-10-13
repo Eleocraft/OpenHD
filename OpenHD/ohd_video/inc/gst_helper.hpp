@@ -442,8 +442,7 @@ static std::string createLibcamerasrcStream(const CameraSettings& settings) {
     // First we set the caps filter(s) on libcamerasrc, this way we control the
     // format (output by ISP), w,h and fps
     ss << fmt::format(
-        "capsfilter "
-        "caps=video/x-raw,width={},height={},format=NV12,framerate={}/"
+        "video/x-raw,width={},height={},format=NV12,framerate={}/"
         "1,interlace-mode=progressive,colorimetry=bt709 ! ",
         settings.streamed_video_format.width,
         settings.streamed_video_format.height,
