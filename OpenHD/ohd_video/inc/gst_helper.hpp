@@ -714,8 +714,7 @@ static std::string createImageSavingCodec(
   ss << "video/x-raw,width=960,height=540,framerate=1/";
   ss << seconds;
   ss << " ! jpegenc ! multifilesink location=";
-  ss << "/home/openhd/Images/test-%02d.jpg";
-  //ss << out_filename << "-%02d.jpg";
+  ss << out_filename << "-%02d.jpg";
   return ss.str();
 }
 
