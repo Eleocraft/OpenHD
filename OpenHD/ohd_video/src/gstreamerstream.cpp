@@ -159,12 +159,10 @@ void GStreamerStream::setup() {
   const bool ADD_IMAGE_SAVING_TO_PIPELINE = setting.air_image_seconds != 0;
   // for safety we only add the tee command at the right place if recording or image saving is
   // enabled.
-  if (ADD_RECORDING_TO_PIPELINE) {
-    m_console->info("Air recording active");
+  if (ADD_IMAGE_SAVING_TO_PIPELINE && ADD_RECORDING_TO_PIPELINE) {
     pipeline_content << "tee name=t ! ";
   }
-  if (ADD_IMAGE_SAVING_TO_PIPELINE)
-    m_console->info("Air image extraction active");
+
   // After we've written the parts for the different camera implementation(s) we
   // just need to append the rtp part and the udp out add rtp part
   if (dirty_use_raw) {
@@ -189,6 +187,7 @@ void GStreamerStream::setup() {
     pipeline_content << OHDGstHelper::createOutputAppSink();
   }
   if (ADD_RECORDING_TO_PIPELINE) {
+    m_console->info("Air recording active");
     const auto recording_filename =
         openhd::video::create_unused_recording_filename(
             OHDGstHelper::file_suffix_for_video_codec(
@@ -201,6 +200,7 @@ void GStreamerStream::setup() {
     m_opt_curr_recording_filename = std::nullopt;
   }
   if (ADD_IMAGE_SAVING_TO_PIPELINE) { // This is the new part
+    m_console->info("Air image extraction active");
     const auto image_filename = openhd::video::create_unused_image_filename();
     pipeline_content << OHDGstHelper::createImageSavingCodec(setting.air_image_seconds, image_filename);
   }
